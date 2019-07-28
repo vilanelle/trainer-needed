@@ -99,6 +99,19 @@ webSocketsServer.on('connection', (socket: WebSocket) => {
         }
         issue.status = 'TAKEN';
         state.trainers.forEach(trainer => sendEvent(trainer.socket, { action: 'ISSUES', payload: state.issues }));
+        const participant = state.participants.find(participant => participant.id === issue.userId);
+        if(!participant) {
+          break;
+        }
+        sendEvent(participant.socket, { action: 'ISSUE_TAKEN', payload: connectedUser.data.name });
+        break;
+      }
+      case 'ISSUE_SOLVED': {
+        const issue = state.issues.find(iss => iss.id === payload);
+        if(!issue) {
+          break;
+        }
+        issue.status = 'SOLVED';
         break;
       }
       default: {
