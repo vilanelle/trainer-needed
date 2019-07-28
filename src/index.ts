@@ -56,7 +56,7 @@ webSocketsServer.on('connection', (socket: WebSocket) => {
 
   socket.on('message', (data) => {
     const { action, payload } = JSON.parse(data.toString());
-    switch (action as Action) {
+     switch (action as Action) {
       case 'PARTICIPANT_LOGIN': {
         connectedUser.data.name = payload.name;
         connectedUser.data.group = payload.group;
@@ -86,8 +86,18 @@ webSocketsServer.on('connection', (socket: WebSocket) => {
         issue.userId = connectedUser.id;
         issue.userName = connectedUser.data.name;
         issue.userGroup = connectedUser.data.group;
+        issue.problem = payload.problem;
         state.issues.push(issue);
         sendEvent(socket, { action: 'ISSUE_RECEIVED' });
+        state.trainers.forEach(trainer => sendEvent(trainer.socket, { action: 'ISSUES', payload: state.issues }));
+        break;
+      }
+      case 'ISSUE_TAKEN': {
+        const issue = state.issues.find(iss => iss.id === payload && iss.status !== 'SOLVED');
+        if(!issue) {
+          break;
+        }
+        issue.status = 'TAKEN';
         state.trainers.forEach(trainer => sendEvent(trainer.socket, { action: 'ISSUES', payload: state.issues }));
         break;
       }
