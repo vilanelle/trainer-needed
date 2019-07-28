@@ -113,6 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderIssueSubmitView();
         break;
       }
+      case 'TRAINER_LOGGED': {
+        renderTrainerDashboardView();
+        break;
+      }
       case 'ISSUE_RECEIVED': {
         renderIssueReceivedView();
         break;
