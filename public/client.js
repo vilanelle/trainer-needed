@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTemplateById('trainerLogin');
     const trainerLoginForm = getNodeById('trainerLoginForm');
     trainerLoginForm.addEventListener('submit', e => {
-      
       e.preventDefault();
       const formData = new FormData(event.target);
       const name = formData.get('name');
@@ -56,13 +55,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const renderIssueReceivedView = () => {
     renderTemplateById('issueReceived');
   };
-  const renderIssueTakenView = trainerName => {
+  const renderIssueTakenView = ({ trainerName, issueId }) => {
     renderTemplateById('issueTaken');
     const header = getNodeById("issueTakenHeader");
     header.textContent = `Trener ${trainerName} przyjął Twoje zgłoszenie, zaraz podejdzie.`;
     const issueSolvedButton = getNodeById('issueSolved');
     issueSolvedButton.addEventListener('click', () => {
-      sendEvent('ISSUE_SOLVED');
+      sendEvent('ISSUE_SOLVED', issueId);
       renderIssueSubmitView();
     })
   };
@@ -74,25 +73,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const issueListItemTemplate = getNodeById('issueListItem');
     const issueListNode = getNodeById('issueList');
+    if(data) {
+      data.forEach(it => {
+        const issueListItemNode = document.importNode(issueListItemTemplate.content, true);
+        const takeIssueButtonNode = issueListItemNode.querySelector('.issueListItemActions button');
+        const issueListHintFormNode = issueListItemNode.querySelector('.issueListHintForm');
+        issueListHintFormNode.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const hint = formData.get('hint');
+          sendEvent('HINT_SENT', { hint, userId: it.userId });
+        });
 
-    data.forEach(it => {
-      const issueListItemNode = document.importNode(issueListItemTemplate.content, true);
-      const takeIssueButtonNode = issueListItemNode.querySelector('.issueListItemActions button');
+        issueListItemNode.querySelector('.issueListItemName').textContent = it.userName;
+        issueListItemNode.querySelector('.issueListItemGroup').textContent = it.userGroup;
+        issueListItemNode.querySelector('.issueListItemProblem').textContent = it.problem;
+        issueListItemNode.querySelector('.issueListItemStatus').textContent = it.status;
+        issueListNode.appendChild(issueListItemNode);
 
-      issueListItemNode.querySelector('.issueListItemName').textContent = it.userName;
-      issueListItemNode.querySelector('.issueListItemGroup').textContent = it.userGroup;
-      issueListItemNode.querySelector('.issueListItemProblem').textContent = it.problem;
-      issueListItemNode.querySelector('.issueListItemStatus').textContent = it.status;
-      issueListNode.appendChild(issueListItemNode);
-
-      switch(it.status) {
-        case 'PENDING':
-          takeIssueButtonNode.addEventListener('click', () => sendEvent('ISSUE_TAKEN', it.id));
-          break;
-          default:
-          takeIssueButtonNode.classList.add('hide');
-      }
-    });
+        switch(it.status) {
+          case 'PENDING': {
+            takeIssueButtonNode.addEventListener('click', () => sendEvent('ISSUE_TAKEN', it.id));
+            break;
+          }
+          case 'TAKEN': {
+            takeIssueButtonNode.classList.add('hide');
+            issueListHintFormNode.classList.add('hide');
+          }
+            default:
+            takeIssueButtonNode.classList.add('hide');
+            issueListHintFormNode.classList.add('hide');
+        }
+      });
+    }
   };
 
   renderLandingView();

@@ -114,6 +114,14 @@ webSocketsServer.on('connection', (socket: WebSocket) => {
         issue.status = 'SOLVED';
         break;
       }
+      case 'HINT_SENT': {
+        const participant = state.participants.find(participant => participant.id === payload.userId);
+        if(!participant) {
+          break;
+        }
+        
+        break;
+      }
       default: {
         console.error('unknown action');
       }
